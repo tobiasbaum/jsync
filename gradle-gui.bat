@@ -1,0 +1,1 @@
+"C:\Programme\gradle\gradle-1.6\bin\gradle.bat" --gui
