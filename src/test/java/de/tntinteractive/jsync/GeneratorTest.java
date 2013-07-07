@@ -4,28 +4,31 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.Test;
 
 public class GeneratorTest {
 
     private static String callGenerator(GeneratorCommandBuilder input, StubFilePath remoteParentDir) {
+        final BlockingQueue<Integer> toResend = new LinkedBlockingQueue<Integer>();
+        toResend.add(-1);
+        return callGenerator(input, remoteParentDir, toResend);
+    }
+
+    private static String callGenerator(GeneratorCommandBuilder input, StubFilePath remoteParentDir,
+            BlockingQueue<Integer> toResend) {
         final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Generator e = new Generator(source, remoteParentDir, buffer, new FilePathBuffer());
+        final Generator e = new Generator(source, remoteParentDir, toResend, buffer, new FilePathBuffer());
         e.run();
         return TestHelper.toHexString(buffer.toByteArray());
     }
 
     private static void checkChildren(FilePath dir, String... expectedNames) {
-        final List<String> actualNames = new ArrayList<String>();
-        for (final FilePath p : dir.getChildrenSorted()) {
-            actualNames.add(p.getName());
-        }
-        assertEquals(Arrays.asList(expectedNames), actualNames);
+        assertEquals(Arrays.asList(expectedNames), TestHelper.getChildrenNames(dir));
     }
 
 
@@ -306,4 +309,37 @@ public class GeneratorTest {
         checkChildren(remoteParentDir.getChild("xyz").getChild("neu"));
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testResend() throws Exception {
+        final LinkedBlockingQueue<Integer> toResend = new LinkedBlockingQueue<Integer>();
+        toResend.add(0);
+        toResend.add(-1);
+
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .file("datei2", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0)
+                .endFile()
+                .startFile(1)
+                .endFile()
+                .startFile(0)
+                .endFile()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir, toResend);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
 }

@@ -1,16 +1,22 @@
 package de.tntinteractive.jsync;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class StubFilePath implements FilePath {
 
     private final StubFilePath parent;
-    private final String name;
+    private String name;
     private final boolean isDir;
     private final TreeMap<String, StubFilePath> children;
     private final long size;
     private final long lastChange;
+    private byte[] content;
 
     /**
      * Konstruktor für Verzeichnis.
@@ -44,6 +50,11 @@ public class StubFilePath implements FilePath {
         }
     }
 
+    public StubFilePath(StubFilePath parent, String name, String content) {
+        this(parent, name, content.length(), 42);
+        this.content = TestHelper.toIso(content);
+    }
+
     @Override
     public String getName() {
         return this.name;
@@ -59,6 +70,7 @@ public class StubFilePath implements FilePath {
         return this.isDir;
     }
 
+    @Override
     public StubFilePath getParent() {
         return this.parent;
     }
@@ -75,7 +87,13 @@ public class StubFilePath implements FilePath {
 
     @Override
     public StubFilePath getChild(String name) {
-        return this.children.get(name);
+        if (this.children.containsKey(name)) {
+            return this.children.get(name);
+        } else {
+            final StubFilePath ret = new StubFilePath(this, name, 0, 0);
+            this.children.remove(name);
+            return ret;
+        }
     }
 
     @Override
@@ -92,6 +110,40 @@ public class StubFilePath implements FilePath {
     @Override
     public void delete() {
         this.parent.children.remove(this.getName());
+    }
+
+    @Override
+    public InputStream openInputStream() {
+        return new ByteArrayInputStream(this.content);
+    }
+
+    public String getContent() {
+        return TestHelper.fromIso(this.content);
+    }
+
+    @Override
+    public void renameTo(String newName) {
+        this.getParent().children.remove(this.name);
+        this.name = newName;
+        this.getParent().children.put(newName, this);
+    }
+
+    @Override
+    public OutputStream openOutputStream() {
+        return new OutputStream() {
+            private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+            @Override
+            public void write(int b) throws IOException {
+                this.buffer.write(b);
+            }
+
+            @Override
+            public void close() throws IOException {
+                this.buffer.close();
+                StubFilePath.this.content = this.buffer.toByteArray();
+            }
+        };
     }
 
 }

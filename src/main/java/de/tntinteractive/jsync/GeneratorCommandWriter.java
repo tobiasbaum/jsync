@@ -2,6 +2,7 @@ package de.tntinteractive.jsync;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
 
 class GeneratorCommandWriter {
 
@@ -9,11 +10,6 @@ class GeneratorCommandWriter {
 
     public GeneratorCommandWriter(DataOutputStream output) {
         this.output = output;
-    }
-
-    void writeInitInfo(String remoteParentDir) throws IOException {
-        this.output.writeByte(GeneratorCommand.INIT.getCode());
-        this.output.writeUTF(remoteParentDir);
     }
 
     void writeStepDown(String name) throws IOException {
@@ -30,6 +26,14 @@ class GeneratorCommandWriter {
 
     void writeStepUp() throws IOException {
         this.output.writeByte(GeneratorCommand.STEP_UP.getCode());
+    }
+
+    public void close() {
+        try {
+            this.output.close();
+        } catch (final IOException e) {
+            Logger.LOGGER.log(Level.WARNING, "error while closing", e);
+        }
     }
 
 }

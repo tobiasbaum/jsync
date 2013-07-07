@@ -2,6 +2,7 @@ package de.tntinteractive.jsync;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.logging.Level;
 
 class SenderCommandWriter {
 
@@ -18,6 +19,14 @@ class SenderCommandWriter {
 
     void writeFileEnd() throws IOException {
         this.output.writeByte(SenderCommand.FILE_END.getCode());
+    }
+
+    public void close() {
+        try {
+            this.output.close();
+        } catch (final IOException e) {
+            Logger.LOGGER.log(Level.WARNING, "error while closing", e);
+        }
     }
 
 }

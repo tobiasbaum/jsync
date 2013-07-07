@@ -15,11 +15,6 @@ public class GeneratorCommandBuilder extends CommandBuilder {
         return new GeneratorCommandBuilder();
     }
 
-    public GeneratorCommandBuilder init(String remoteParentDir) throws IOException {
-        this.writer.writeInitInfo(remoteParentDir);
-        return this;
-    }
-
     public GeneratorCommandBuilder stepDown(String name) throws IOException {
         this.writer.writeStepDown(name);
         return this;

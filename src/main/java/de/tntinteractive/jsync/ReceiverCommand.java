@@ -1,13 +1,13 @@
 package de.tntinteractive.jsync;
 
-public enum GeneratorCommand {
-    STEP_DOWN(1),
-    FILE(2),
-    STEP_UP(3);
+public enum ReceiverCommand {
+    FILE_START(1),
+    RAW_DATA(2),
+    FILE_END(3);
 
     private final byte code;
 
-    GeneratorCommand(int code) {
+    ReceiverCommand(int code) {
         this.code = (byte) code;
     }
 

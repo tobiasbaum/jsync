@@ -11,6 +11,7 @@ public class TestHelperTest {
         assertEquals("", TestHelper.toHexString(new byte[0]));
         assertEquals("01", TestHelper.toHexString(new byte[] {1}));
         assertEquals("0A10", TestHelper.toHexString(new byte[] {10, 16}));
+        assertEquals("FF", TestHelper.toHexString(new byte[] {(byte) 0xFF}));
     }
 
 }

@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.BlockingQueue;
 
 
 /**
@@ -15,7 +16,8 @@ public class Generator implements Runnable {
 
     /**
      * Obere Schranke für die Dateinamen.
-     * Achtung: Theoretisch könnte es sein, dass eine Datei diesen oder einen größeren Namen hat.
+     * Achtung: Theoretisch könnte es sein, dass eine Datei diesen oder einen größeren Namen hat, dieses Problem wird zur Zeit
+     * ignoriert.
      */
     private static final String MAX_FILENAME = "\uFFFF\uFFFF\uFFFF";
 
@@ -23,6 +25,8 @@ public class Generator implements Runnable {
     private final FilePath localParentDir;
     private final SenderCommandWriter writer;
     private final FilePathBuffer sourceFilePaths;
+
+    private final BlockingQueue<Integer> toResend;
 
     private static class GeneratorCommandData {
 
@@ -100,9 +104,11 @@ public class Generator implements Runnable {
 
     }
 
-    public Generator(InputStream source, FilePath remoteParentDir, OutputStream target, FilePathBuffer filePaths) {
+    public Generator(InputStream source, FilePath remoteParentDir, BlockingQueue<Integer> toResend,
+            OutputStream target, FilePathBuffer filePaths) {
         this.input = new DataInputStream(source);
         this.localParentDir = remoteParentDir;
+        this.toResend = toResend;
         this.writer = new SenderCommandWriter(new DataOutputStream(target));
         this.sourceFilePaths = filePaths;
     }
@@ -130,9 +136,20 @@ public class Generator implements Runnable {
             this.mergeRecursive(baseDir, commandIter);
 
             sanityCheck(!commandIter.hasCurrent());
+
+            while (!Thread.interrupted()) {
+                final Integer index = this.toResend.take();
+                if (index < 0) {
+                    break;
+                }
+                this.writeCopyCommandForMissingFile(index);
+            }
+        } catch (final InterruptedException e) {
         } catch (final IOException e) {
             // TODO Auto-generated method stub
             throw new RuntimeException(e);
+        } finally {
+            this.writer.close();
         }
     }
 

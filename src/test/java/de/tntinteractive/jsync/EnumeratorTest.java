@@ -9,9 +9,9 @@ import org.junit.Test;
 
 public class EnumeratorTest {
 
-    private static String callEnumerator(StubFilePath p, String remoteParentDir) {
+    private static String callEnumerator(StubFilePath p) {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Enumerator e = new Enumerator(p, remoteParentDir, buffer, new FilePathBuffer());
+        final Enumerator e = new Enumerator(p, buffer, new FilePathBuffer());
         e.run();
         return TestHelper.toHexString(buffer.toByteArray());
     }
@@ -22,12 +22,11 @@ public class EnumeratorTest {
                 .build();
 
         final String expected = GeneratorCommandBuilder.start()
-                .init("/tmp")
                 .stepDown("testverz")
                 .stepUp()
                 .toHexString();
 
-        final String actual = callEnumerator(p, "/tmp");
+        final String actual = callEnumerator(p);
         assertEquals(expected, actual);
     }
 
@@ -41,7 +40,6 @@ public class EnumeratorTest {
                 .build();
 
         final String expected = GeneratorCommandBuilder.start()
-                .init("/tmp/123")
                 .stepDown("x")
                 .stepDown("a")
                 .stepUp()
@@ -50,7 +48,7 @@ public class EnumeratorTest {
                 .stepUp()
                 .toHexString();
 
-        final String actual = callEnumerator(p, "/tmp/123");
+        final String actual = callEnumerator(p);
         assertEquals(expected, actual);
     }
 
@@ -63,14 +61,13 @@ public class EnumeratorTest {
                 .build();
 
         final String expected = GeneratorCommandBuilder.start()
-                .init("")
                 .stepDown("x")
                 .file("a.txt", 42, 123)
                 .file("b.txt", 43, 124)
                 .stepUp()
                 .toHexString();
 
-        final String actual = callEnumerator(p, "");
+        final String actual = callEnumerator(p);
         assertEquals(expected, actual);
     }
 
