@@ -11,7 +11,7 @@ public class EnumeratorTest {
 
     private static String callEnumerator(StubFilePath p, String remoteParentDir) {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Enumerator e = new Enumerator(p, remoteParentDir, buffer);
+        final Enumerator e = new Enumerator(p, remoteParentDir, buffer, new FilePathBuffer());
         e.run();
         return TestHelper.toHexString(buffer.toByteArray());
     }

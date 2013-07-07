@@ -1,5 +1,6 @@
 package de.tntinteractive.jsync;
 
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class StubFilePath implements FilePath {
@@ -50,7 +51,7 @@ public class StubFilePath implements FilePath {
 
     @Override
     public Iterable<? extends FilePath> getChildrenSorted() {
-        return this.children.values();
+        return new ArrayList<StubFilePath>(this.children.values());
     }
 
     @Override
@@ -70,6 +71,27 @@ public class StubFilePath implements FilePath {
     @Override
     public long getLastChange() {
         return this.lastChange;
+    }
+
+    @Override
+    public StubFilePath getChild(String name) {
+        return this.children.get(name);
+    }
+
+    @Override
+    public boolean hasChild(String name) {
+        return this.children.containsKey(name);
+    }
+
+    @Override
+    public StubFilePath createSubdirectory(String name) {
+        assert this.isDirectory();
+        return new StubFilePath(this, name);
+    }
+
+    @Override
+    public void delete() {
+        this.parent.children.remove(this.getName());
     }
 
 }

@@ -14,11 +14,13 @@ public class Enumerator implements Runnable {
     private final FilePath localDir;
     private final String remoteParentDir;
     private final GeneratorCommandWriter output;
+    private final FilePathBuffer filePaths;
 
-    public Enumerator(FilePath localDir, String remoteParentDir, OutputStream target) {
+    public Enumerator(FilePath localDir, String remoteParentDir, OutputStream target, FilePathBuffer filePathBuffer) {
         this.localDir = localDir;
         this.remoteParentDir = remoteParentDir;
         this.output = new GeneratorCommandWriter(new DataOutputStream(target));
+        this.filePaths = filePathBuffer;
     }
 
     @Override
@@ -37,6 +39,7 @@ public class Enumerator implements Runnable {
             if (child.isDirectory()) {
                 this.sendDirRecursive(child);
             } else {
+                this.filePaths.add(child);
                 this.output.writeFile(child.getName(), child.getSize(), child.getLastChange());
             }
         }

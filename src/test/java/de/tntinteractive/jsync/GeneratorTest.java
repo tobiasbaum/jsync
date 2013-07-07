@@ -1,0 +1,309 @@
+package de.tntinteractive.jsync;
+
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
+
+public class GeneratorTest {
+
+    private static String callGenerator(GeneratorCommandBuilder input, StubFilePath remoteParentDir) {
+        final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        final Generator e = new Generator(source, remoteParentDir, buffer, new FilePathBuffer());
+        e.run();
+        return TestHelper.toHexString(buffer.toByteArray());
+    }
+
+    private static void checkChildren(FilePath dir, String... expectedNames) {
+        final List<String> actualNames = new ArrayList<String>();
+        for (final FilePath p : dir.getChildrenSorted()) {
+            actualNames.add(p.getName());
+        }
+        assertEquals(Arrays.asList(expectedNames), actualNames);
+    }
+
+
+    @Test
+    public void testDirectoryCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testSimpleDirectoryStructureCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepDown("a")
+                .stepUp()
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "a");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("a"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testMultiDirectoryStructureCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepDown("a")
+                .stepUp()
+                .stepDown("b")
+                .stepUp()
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "a", "b");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("a"));
+        checkChildren(remoteParentDir.getChild("xyz").getChild("b"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testComplexDirectoryStructureCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepDown("a")
+                .stepDown("b")
+                .stepUp()
+                .stepUp()
+                .stepDown("c")
+                .stepUp()
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "a", "c");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("a"), "b");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("a").getChild("b"));
+        checkChildren(remoteParentDir.getChild("xyz").getChild("c"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testStuffInRemoteParentDirIsLeftUntouched() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("stuff")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "stuff", "xyz");
+        checkChildren(remoteParentDir.getChild("stuff"));
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDirectoryDeletion1() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .startDir("willBeDeleted")
+                .endDir()
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDirectoryDeletion2() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepDown("willBeCreated")
+                .stepUp()
+                .stepDown("willStay")
+                .stepUp()
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .startDir("willBeDeleted")
+                .endDir()
+                .startDir("willStay")
+                .endDir()
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "willBeCreated", "willStay");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("willBeCreated"));
+        checkChildren(remoteParentDir.getChild("xyz").getChild("willStay"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFileDeletion() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .file("datei", 123, 456)
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFileWithSameAttributesIsNotCopied() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .file("datei", 123, 456)
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "datei");
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFileCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0)
+                .endFile()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testMultipleFileCreation() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .file("datei2", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0)
+                .endFile()
+                .startFile(1)
+                .endFile()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFileCreationInNewDirectory() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .stepDown("neu")
+                .file("datei", 123, 456)
+                .stepUp()
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0)
+                .endFile()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"), "neu");
+        checkChildren(remoteParentDir.getChild("xyz").getChild("neu"));
+        assertEquals(expected, actual);
+    }
+}

@@ -1,13 +1,15 @@
 package de.tntinteractive.jsync;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class GeneratorCommandBuilder {
+public class GeneratorCommandBuilder extends CommandBuilder {
 
-    private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    private final GeneratorCommandWriter writer = new GeneratorCommandWriter(new DataOutputStream(this.buffer));
+    private final GeneratorCommandWriter writer;
+
+    public GeneratorCommandBuilder() {
+        this.writer = new GeneratorCommandWriter(new DataOutputStream(this.getBuffer()));
+    }
 
     public static GeneratorCommandBuilder start() {
         return new GeneratorCommandBuilder();
@@ -31,10 +33,6 @@ public class GeneratorCommandBuilder {
     public GeneratorCommandBuilder stepUp() throws IOException {
         this.writer.writeStepUp();
         return this;
-    }
-
-    public String toHexString() {
-        return TestHelper.toHexString(this.buffer.toByteArray());
     }
 
 }

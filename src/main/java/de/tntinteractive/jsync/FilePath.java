@@ -15,4 +15,11 @@ public interface FilePath {
 
     public abstract long getLastChange();
 
+    public abstract FilePath getChild(String string);
+
+    public abstract boolean hasChild(String name);
+
+    public abstract FilePath createSubdirectory(String name);
+
+    public abstract void delete();
 }
