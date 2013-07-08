@@ -27,7 +27,7 @@ public class GeneratorTest {
         return TestHelper.toHexString(buffer.toByteArray());
     }
 
-    private static void checkChildren(FilePath dir, String... expectedNames) {
+    private static void checkChildren(FilePath dir, String... expectedNames) throws Exception {
         assertEquals(Arrays.asList(expectedNames), TestHelper.getChildrenNames(dir));
     }
 
@@ -42,6 +42,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -61,6 +63,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -84,6 +88,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -110,6 +116,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -133,6 +141,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -156,6 +166,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -184,6 +196,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -207,6 +221,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -229,6 +245,8 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -252,6 +270,8 @@ public class GeneratorTest {
         final String expected = SenderCommandBuilder.start()
                 .startFile(0)
                 .endFile()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -278,6 +298,8 @@ public class GeneratorTest {
                 .endFile()
                 .startFile(1)
                 .endFile()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -301,6 +323,8 @@ public class GeneratorTest {
         final String expected = SenderCommandBuilder.start()
                 .startFile(0)
                 .endFile()
+                .enumeratorDone()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir);
@@ -332,8 +356,10 @@ public class GeneratorTest {
                 .endFile()
                 .startFile(1)
                 .endFile()
+                .enumeratorDone()
                 .startFile(0)
                 .endFile()
+                .everythingOk()
                 .toHexString();
 
         final String actual = callGenerator(input, remoteParentDir, toResend);

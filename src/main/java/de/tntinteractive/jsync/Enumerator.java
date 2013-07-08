@@ -14,11 +14,13 @@ public class Enumerator implements Runnable {
     private final FilePath localDir;
     private final GeneratorCommandWriter writer;
     private final FilePathBuffer filePaths;
+    private final ExceptionBuffer exc;
 
-    public Enumerator(FilePath localDir, OutputStream target, FilePathBuffer filePathBuffer) {
+    public Enumerator(FilePath localDir, OutputStream target, FilePathBuffer filePathBuffer, ExceptionBuffer exc) {
         this.localDir = localDir;
         this.writer = new GeneratorCommandWriter(new DataOutputStream(target));
         this.filePaths = filePathBuffer;
+        this.exc = exc;
     }
 
     @Override
@@ -26,7 +28,7 @@ public class Enumerator implements Runnable {
         try {
             this.sendDirRecursive(this.localDir);
         } catch (final IOException e) {
-            ClientUtil.handleException(e);
+            this.exc.addThrowable(e);
         } finally {
             this.writer.close();
         }

@@ -19,15 +19,15 @@ public class JsyncClient {
             final String[] hostAndPort = args[1].split(":");
             final int port = Integer.parseInt(hostAndPort[1]);
             new JsyncClient().syncDirectory(localDirectory, hostAndPort[0], port, args[2]);
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             e.printStackTrace();
-            Logger.LOGGER.info("Expected command line: <localDir> <host:port> <targetDir>");
+            System.out.println("Expected command line: <localDir> <host:port> <targetDir>");
             System.exit(99);
         }
     }
 
     public void syncDirectory(File localDirectory, String remoteHost, int remotePort,
-            String remoteParentDirectory) throws IOException, InterruptedException {
+            String remoteParentDirectory) throws Throwable {
 
         final Socket ch1 = new Socket(remoteHost, remotePort);
         try {
@@ -43,17 +43,20 @@ public class JsyncClient {
                 this.initSecondChannel(ch2out, sessionId);
 
                 final FilePathBuffer filePaths = new FilePathBuffer();
+                final ExceptionBuffer exc = new ExceptionBuffer();
 
-                final Sender sender = new Sender(ch2in, filePaths, ch2out);
+                final Sender sender = new Sender(ch2in, filePaths, ch2out, exc);
                 final Thread st = new Thread(sender, "sender");
                 st.start();
 
-                final Enumerator enumerator = new Enumerator(new FilePathAdapter(localDirectory), ch1out, filePaths);
+                final Enumerator enumerator = new Enumerator(new FilePathAdapter(localDirectory), ch1out, filePaths, exc);
                 final Thread et = new Thread(enumerator, "enumerator");
                 et.start();
 
                 et.join();
                 st.join();
+
+                exc.doHandling();
             } finally {
                 ch2.close();
             }
@@ -68,7 +71,11 @@ public class JsyncClient {
         out.writeUTF(remoteParentDirectory);
 
         final DataInputStream in = new DataInputStream(ch1in);
-        return in.readInt();
+        final int sessionId = in.readInt();
+        if (sessionId < 0) {
+            throw new IOException("Error while initiating session: " + in.readUTF());
+        }
+        return sessionId;
     }
 
     private void initSecondChannel(OutputStream ch2out, int sessionId) throws IOException {

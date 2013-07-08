@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 
 
 /**
@@ -137,6 +138,8 @@ public class Generator implements Runnable {
 
             sanityCheck(!commandIter.hasCurrent());
 
+            this.writer.writeEnumeratorDone();
+
             while (!Thread.interrupted()) {
                 final Integer index = this.toResend.take();
                 if (index < 0) {
@@ -144,10 +147,11 @@ public class Generator implements Runnable {
                 }
                 this.writeCopyCommandForMissingFile(index);
             }
+
+            this.writer.writeEverythingOk();
         } catch (final InterruptedException e) {
         } catch (final IOException e) {
-            // TODO Auto-generated method stub
-            throw new RuntimeException(e);
+            Logger.LOGGER.log(Level.SEVERE, "exception in generator", e);
         } finally {
             this.writer.close();
         }
@@ -158,7 +162,7 @@ public class Generator implements Runnable {
 
         final ExplicitMoveIterator<FilePath> childrenIter =
                 new ExplicitMoveAdapter<FilePath>(localDir.getChildrenSorted());
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             final GeneratorCommandData currentCommand = commandIter.get();
             final String remoteName = currentCommand.getName();
             final String localName = childrenIter.hasCurrent() ? childrenIter.get().getName() : MAX_FILENAME;

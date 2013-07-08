@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 
 /**
  * Empfängt das Diff vom {@link Sender} und baut daraufhin die Zieldatei auf.
@@ -17,6 +18,10 @@ public class Receiver implements Runnable {
     private final DataInputStream input;
     private final FilePathBuffer filePaths;
     private final BlockingQueue<Integer> toResend;
+
+    private boolean enumeratorDone;
+
+    private int openResends;
 
     public Receiver(InputStream source, FilePathBuffer b, BlockingQueue<Integer> toResend) {
         this.input = new DataInputStream(source);
@@ -56,21 +61,39 @@ public class Receiver implements Runnable {
                         //Prüfsumme OK => echte Datei mit Tempdatei überschreiben
                         tmpFileStream.close();
                         this.renameToRealName(tmpFile);
+                        if (this.enumeratorDone) {
+                            this.openResends--;
+                            assert this.openResends >= 0;
+                            if (this.openResends == 0) {
+                                break;
+                            }
+                        }
                     } else {
                         //Prüfsumme nicht OK => Datei in die Resend-Queue stecken
                         this.toResend.add(index);
+                        if (!this.enumeratorDone) {
+                            this.openResends++;
+                        }
+                    }
+                } else if (command == ReceiverCommand.ENUMERATOR_DONE.getCode()) {
+                    this.enumeratorDone = true;
+                    if (this.openResends == 0) {
+                        break;
                     }
                 } else {
                     throw new IOException("unknown command " + command);
                 }
             }
 
-            //-1 zum Abschluß der Queue
+            //dem Generator sagen, dass nichts mehr kommt
             this.toResend.add(-1);
-        } catch (final IOException e) {
-            // TODO Auto-generated method stub
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (final Exception e) {
+            Logger.LOGGER.log(Level.SEVERE, "exception in receiver", e);
+            try {
+                this.input.close();
+            } catch (final IOException e1) {
+                Logger.LOGGER.log(Level.WARNING, "exception while closing", e1);
+            }
         }
     }
 

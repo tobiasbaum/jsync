@@ -15,20 +15,26 @@ public class Sender implements Runnable {
     private final DataInputStream source;
     private final FilePathBuffer filePaths;
     private final ReceiverCommandWriter writer;
+    private final ExceptionBuffer exc;
 
-    public Sender(InputStream source, FilePathBuffer filePaths, OutputStream target) {
+    public Sender(InputStream source, FilePathBuffer filePaths, OutputStream target, ExceptionBuffer exc) {
         this.source = new DataInputStream(source);
         this.filePaths = filePaths;
         this.writer = new ReceiverCommandWriter(new DataOutputStream(target));
+        this.exc = exc;
     }
 
     @Override
     public void run() {
         try {
+            boolean okReceived = false;
             int index = -1;
             while (!Thread.interrupted()) {
                 final int command = this.source.read();
                 if (command < 0) {
+                    if (!okReceived) {
+                        throw new IOException("Error while copying! Check daemon log for details.");
+                    }
                     return;
                 }
                 if (command == SenderCommand.FILE_START.getCode()) {
@@ -37,14 +43,16 @@ public class Sender implements Runnable {
                     throw new RuntimeException();
                 } else if (command == SenderCommand.FILE_END.getCode()) {
                     this.doFileHandling(index);
+                } else if (command == SenderCommand.ENUMERATOR_DONE.getCode()) {
+                    this.writer.writeEnumeratorDone();
+                } else if (command == SenderCommand.EVERYTHING_OK.getCode()) {
+                    okReceived = true;
                 } else {
                     throw new IOException("unknown command " + command);
                 }
             }
         } catch (final IOException e) {
-            //TODO handle
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            this.exc.addThrowable(e);
         } finally {
             this.writer.close();
         }

@@ -9,10 +9,12 @@ import org.junit.Test;
 
 public class EnumeratorTest {
 
-    private static String callEnumerator(StubFilePath p) {
+    private static String callEnumerator(StubFilePath p) throws Exception {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Enumerator e = new Enumerator(p, buffer, new FilePathBuffer());
+        final ExceptionBuffer exc = new ExceptionBuffer();
+        final Enumerator e = new Enumerator(p, buffer, new FilePathBuffer(), exc);
         e.run();
+        exc.doHandling();
         return TestHelper.toHexString(buffer.toByteArray());
     }
 

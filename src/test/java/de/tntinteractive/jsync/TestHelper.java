@@ -47,7 +47,7 @@ public class TestHelper {
         return md4.engineDigest();
     }
 
-    public static List<String> getChildrenNames(FilePath dir) {
+    public static List<String> getChildrenNames(FilePath dir) throws Exception {
         final List<String> actualNames = new ArrayList<String>();
         for (final FilePath p : dir.getChildrenSorted()) {
             actualNames.add(p.getName());

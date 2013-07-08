@@ -25,4 +25,14 @@ public class SenderCommandBuilder extends CommandBuilder {
         return this;
     }
 
+    public SenderCommandBuilder enumeratorDone() throws IOException {
+        this.writer.writeEnumeratorDone();
+        return this;
+    }
+
+    public SenderCommandBuilder everythingOk() throws IOException {
+        this.writer.writeEverythingOk();
+        return this;
+    }
+
 }

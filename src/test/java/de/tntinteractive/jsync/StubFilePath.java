@@ -61,7 +61,10 @@ public class StubFilePath implements FilePath {
     }
 
     @Override
-    public Iterable<? extends FilePath> getChildrenSorted() {
+    public Iterable<? extends FilePath> getChildrenSorted() throws IOException {
+        if (this.getParent() != null && !this.getParent().hasChild(this.getName())) {
+            throw new IOException(this.name + " does not exist");
+        }
         return new ArrayList<StubFilePath>(this.children.values());
     }
 

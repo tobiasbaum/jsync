@@ -21,6 +21,14 @@ class SenderCommandWriter {
         this.output.writeByte(SenderCommand.FILE_END.getCode());
     }
 
+    void writeEnumeratorDone() throws IOException {
+        this.output.writeByte(SenderCommand.ENUMERATOR_DONE.getCode());
+    }
+
+    void writeEverythingOk() throws IOException {
+        this.output.writeByte(SenderCommand.EVERYTHING_OK.getCode());
+    }
+
     public void close() {
         try {
             this.output.close();

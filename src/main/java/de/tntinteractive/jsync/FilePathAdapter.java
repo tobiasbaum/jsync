@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 
 public class FilePathAdapter implements FilePath {
@@ -31,10 +30,10 @@ public class FilePathAdapter implements FilePath {
     }
 
     @Override
-    public Iterable<? extends FilePath> getChildrenSorted() {
+    public Iterable<? extends FilePath> getChildrenSorted() throws IOException {
         final File[] children = this.file.listFiles();
         if (children == null) {
-            return Collections.emptyList();
+            throw new IOException("Could not determine children of " + this.file + ". Does it exist?");
         }
         Arrays.sort(children, new Comparator<File>() {
             @Override
@@ -90,8 +89,10 @@ public class FilePathAdapter implements FilePath {
 
     @Override
     public void delete() throws IOException {
-        for (final FilePath child : this.getChildrenSorted()) {
-            child.delete();
+        if (this.isDirectory()) {
+            for (final FilePath child : this.getChildrenSorted()) {
+                child.delete();
+            }
         }
         final boolean deleted = this.file.delete();
         if (!deleted) {

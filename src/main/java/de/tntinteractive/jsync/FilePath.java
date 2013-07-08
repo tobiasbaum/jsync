@@ -13,7 +13,7 @@ public interface FilePath {
 
     public abstract FilePath getParent();
 
-    public abstract Iterable<? extends FilePath> getChildrenSorted();
+    public abstract Iterable<? extends FilePath> getChildrenSorted() throws IOException;
 
     public abstract FilePath getChild(String string);
 
