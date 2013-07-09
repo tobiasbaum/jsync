@@ -21,9 +21,9 @@ public class FastConcurrentList<T> {
 
     public int add(T p) {
         final int index = this.length++;
-        if (this.length >= this.content.length) {
-            final Object[] newContent = new FilePath[this.content.length * 2];
-            System.arraycopy(this.content, 0, newContent, 0, this.length);
+        if (index >= this.content.length) {
+            final Object[] newContent = new Object[this.content.length * 2];
+            System.arraycopy(this.content, 0, newContent, 0, index);
             this.content = newContent;
         }
         this.content[index] = p;
