@@ -38,7 +38,7 @@ public class DaemonSession {
         this.ch2out = out;
 
         final LinkedBlockingQueue<Integer> toResend = new LinkedBlockingQueue<Integer>();
-        final FilePathBuffer filePaths = new FilePathBuffer();
+        final FastConcurrentList<TargetFileInfo> filePaths = new FastConcurrentList<TargetFileInfo>();
 
         final Receiver receiver = new Receiver(this.ch2in, filePaths, toResend);
         final Thread rt = new Thread(receiver, "receiver" + this.sessionId);

@@ -25,9 +25,10 @@ public class Generator implements Runnable {
     private final DataInputStream input;
     private final FilePath localParentDir;
     private final SenderCommandWriter writer;
-    private final FilePathBuffer sourceFilePaths;
+    private final FastConcurrentList<TargetFileInfo> sourceFilePaths;
 
     private final BlockingQueue<Integer> toResend;
+    private int strongHashSize = 4;
 
     private static class GeneratorCommandData {
 
@@ -106,7 +107,7 @@ public class Generator implements Runnable {
     }
 
     public Generator(InputStream source, FilePath remoteParentDir, BlockingQueue<Integer> toResend,
-            OutputStream target, FilePathBuffer filePaths) {
+            OutputStream target, FastConcurrentList<TargetFileInfo> filePaths) {
         this.input = new DataInputStream(source);
         this.localParentDir = remoteParentDir;
         this.toResend = toResend;
@@ -139,12 +140,19 @@ public class Generator implements Runnable {
             sanityCheck(!commandIter.hasCurrent());
 
             this.writer.writeEnumeratorDone();
+            this.strongHashSize++;
 
+            int lastIndex = -1;
             while (!Thread.interrupted()) {
-                final Integer index = this.toResend.take();
+                final int index = this.toResend.take();
                 if (index < 0) {
                     break;
                 }
+                if (index <= lastIndex) {
+                    //neue Runde
+                    this.strongHashSize++;
+                }
+                lastIndex = index;
                 this.writeCopyCommandForMissingFile(index);
             }
 
@@ -198,7 +206,8 @@ public class Generator implements Runnable {
                 //an der Quelle gibt's eine Datei => prüfen, wie's lokal aussieht
                 if (remoteName.compareTo(localName) < 0) {
                     //es gibt an der Quelle eine Datei, die es lokal nicht gibt => Kommando für Sender erzeugen
-                    final int index = this.sourceFilePaths.add(localDir.getChild(remoteName));
+                    final int index = this.sourceFilePaths.add(
+                            new TargetFileInfo(localDir.getChild(remoteName), currentCommand.getLastChange()));
                     this.writeCopyCommandForMissingFile(index);
                     commandIter.move();
                 } else if (remoteName.compareTo(localName) > 0) {
@@ -207,7 +216,8 @@ public class Generator implements Runnable {
                     childrenIter.move();
                 } else {
                     //es gibt an der Quelle und lokal einen gleichnamigen Eintrag
-                    final int index = this.sourceFilePaths.add(localDir.getChild(remoteName));
+                    final int index = this.sourceFilePaths.add(
+                            new TargetFileInfo(localDir.getChild(remoteName), currentCommand.getLastChange()));
                     if (childrenIter.get().isDirectory()) {
                         //aber es ist lokal ein Verzeichnis => löschen und Kommando für Sender erzeugen
                         throw new RuntimeException();
@@ -220,7 +230,7 @@ public class Generator implements Runnable {
                         //  sonst Kommando (mit Hashes) für Sender erzeugen
                         if (commandIter.get().getSize() != childrenIter.get().getSize()
                             || commandIter.get().getLastChange() != childrenIter.get().getLastChange()) {
-                            throw new RuntimeException();
+                            this.writeCopyCommandForExistingFile(index);
                         }
                     }
                     commandIter.move();
@@ -242,8 +252,33 @@ public class Generator implements Runnable {
         }
     }
 
+    private void writeCopyCommandForExistingFile(int index) throws IOException {
+        //als zweiter Sicherheitsmechanismus werden beim Resend nicht nur die Hashes länger, sondern auch
+        //  die Blöcke
+        final int blockSize = 2044 + this.strongHashSize;
+        this.writer.writeFileStart(index, this.strongHashSize, blockSize);
+        final InputStream in = this.sourceFilePaths.get(index).getFilePath().openInputStream();
+        try {
+            this.sendHashes(in, blockSize);
+        } finally {
+            in.close();
+        }
+        this.writer.writeFileEnd();
+    }
+
+    private void sendHashes(InputStream in, int blockSize) throws IOException {
+        final byte[] block = new byte[blockSize];
+        while (StreamHelper.readFully(in, block) == block.length) {
+            //nur vollständig gelesene Blöcke werden gehasht, der unvollständige Rest wird
+            // der Einfachheit halber nicht mitgeschickt
+            final int rollingHash = Checksum32.determineFor(block);
+            final byte[] strongHash = MD4.determineFor(block, this.strongHashSize);
+            this.writer.writeHashes(rollingHash, strongHash);
+        }
+    }
+
     private void writeCopyCommandForMissingFile(int index) throws IOException {
-        this.writer.writeFileStart(index);
+        this.writer.writeFileStart(index, this.strongHashSize, 0);
         this.writer.writeFileEnd();
     }
 
@@ -259,7 +294,8 @@ public class Generator implements Runnable {
                 this.createAllRecursive(subdir, commandIter);
                 break;
             case FILE:
-                final int index = this.sourceFilePaths.add(dir.getChild(commandIter.get().getName()));
+                final int index = this.sourceFilePaths.add(
+                        new TargetFileInfo(dir.getChild(cur.getName()), cur.getLastChange()));
                 this.writeCopyCommandForMissingFile(index);
                 commandIter.move();
                 break;

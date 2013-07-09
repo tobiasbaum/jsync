@@ -13,10 +13,11 @@ public class Enumerator implements Runnable {
 
     private final FilePath localDir;
     private final GeneratorCommandWriter writer;
-    private final FilePathBuffer filePaths;
+    private final FastConcurrentList<FilePath> filePaths;
     private final ExceptionBuffer exc;
 
-    public Enumerator(FilePath localDir, OutputStream target, FilePathBuffer filePathBuffer, ExceptionBuffer exc) {
+    public Enumerator(FilePath localDir, OutputStream target,
+            FastConcurrentList<FilePath> filePathBuffer, ExceptionBuffer exc) {
         this.localDir = localDir;
         this.writer = new GeneratorCommandWriter(new DataOutputStream(target));
         this.filePaths = filePathBuffer;

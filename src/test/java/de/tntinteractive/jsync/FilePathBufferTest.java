@@ -9,7 +9,7 @@ public class FilePathBufferTest {
 
     @Test
     public void testFilePathBuffer() {
-        final FilePathBuffer b = new FilePathBuffer();
+        final FastConcurrentList<FilePath> b = new FastConcurrentList<FilePath>();
         for (int i = 0; i < 500; i++) {
             final StubFilePath fp = new StubFilePath(null, "d" + i);
             final int idx = b.add(fp);

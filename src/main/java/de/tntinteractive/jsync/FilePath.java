@@ -25,6 +25,8 @@ public interface FilePath {
 
     public abstract long getLastChange();
 
+    public abstract void setLastChange(long lastChange) throws IOException;
+
     public abstract FilePath createSubdirectory(String name) throws IOException;
 
     public abstract void delete() throws IOException;
@@ -34,5 +36,7 @@ public interface FilePath {
     public abstract InputStream openInputStream() throws IOException;
 
     public abstract OutputStream openOutputStream() throws IOException;
+
+    public abstract RandomAccessInput openRandomAccessInput() throws IOException;
 
 }

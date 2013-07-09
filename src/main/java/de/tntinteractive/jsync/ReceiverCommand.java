@@ -3,8 +3,9 @@ package de.tntinteractive.jsync;
 public enum ReceiverCommand {
     FILE_START(1),
     RAW_DATA(2),
-    FILE_END(3),
-    ENUMERATOR_DONE(4);
+    COPY_BLOCK(3),
+    FILE_END(4),
+    ENUMERATOR_DONE(5);
 
     private final byte code;
 

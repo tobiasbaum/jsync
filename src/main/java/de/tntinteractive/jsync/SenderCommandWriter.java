@@ -12,9 +12,19 @@ class SenderCommandWriter {
         this.output = output;
     }
 
-    void writeFileStart(int index) throws IOException {
+    void writeFileStart(int index, int strongHashSize, int blockSize) throws IOException {
+        assert strongHashSize <= Byte.MAX_VALUE;
+        assert blockSize <= Short.MAX_VALUE;
         this.output.writeByte(SenderCommand.FILE_START.getCode());
         this.output.writeInt(index);
+        this.output.writeByte(strongHashSize);
+        this.output.writeShort(blockSize);
+    }
+
+    void writeHashes(int rollingHash, byte[] strongHash) throws IOException {
+        this.output.writeByte(SenderCommand.HASH.getCode());
+        this.output.writeInt(rollingHash);
+        this.output.write(strongHash);
     }
 
     void writeFileEnd() throws IOException {

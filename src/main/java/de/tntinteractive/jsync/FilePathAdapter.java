@@ -78,6 +78,14 @@ public class FilePathAdapter implements FilePath {
     }
 
     @Override
+    public void setLastChange(long lastChange) throws IOException {
+        final boolean success = this.file.setLastModified(lastChange);
+        if (!success) {
+            throw new IOException("setting last modified failed for " + this.file);
+        }
+    }
+
+    @Override
     public FilePath createSubdirectory(String name) throws IOException {
         final File sf = this.createSubfile(name);
         final boolean created = sf.mkdir();
@@ -92,7 +100,7 @@ public class FilePathAdapter implements FilePath {
         if (this.isDirectory()) {
             for (final FilePath child : this.getChildrenSorted()) {
                 child.delete();
-            }
+             }
         }
         final boolean deleted = this.file.delete();
         if (!deleted) {
@@ -102,7 +110,9 @@ public class FilePathAdapter implements FilePath {
 
     @Override
     public void renameTo(String newName) throws IOException {
-        final boolean success = this.file.renameTo(new File(this.file.getParentFile(), newName));
+        final File newFile = new File(this.file.getParentFile(), newName);
+        newFile.delete();
+        final boolean success = this.file.renameTo(newFile);
         if (!success) {
             throw new IOException("could not rename " + this.file + " to " + newName);
         }
@@ -116,6 +126,11 @@ public class FilePathAdapter implements FilePath {
     @Override
     public OutputStream openOutputStream() throws IOException {
         return new FileOutputStream(this.file);
+    }
+
+    @Override
+    public RandomAccessInput openRandomAccessInput() throws IOException {
+        return new RandomAccessFileInput(this.file);
     }
 
 }

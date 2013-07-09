@@ -15,8 +15,13 @@ public class SenderCommandBuilder extends CommandBuilder {
         return new SenderCommandBuilder();
     }
 
-    public SenderCommandBuilder startFile(int index) throws IOException {
-        this.writer.writeFileStart(index);
+    public SenderCommandBuilder startFile(int index, int strongHashSize, int blockSize) throws IOException {
+        this.writer.writeFileStart(index, strongHashSize, blockSize);
+        return this;
+    }
+
+    public SenderCommandBuilder hash(int rollingChecksum, byte[] shortMD4) throws IOException {
+        this.writer.writeHashes(rollingChecksum, shortMD4);
         return this;
     }
 

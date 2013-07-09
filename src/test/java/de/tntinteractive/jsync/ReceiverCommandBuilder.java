@@ -32,6 +32,12 @@ public class ReceiverCommandBuilder extends CommandBuilder {
         return this;
     }
 
+    public ReceiverCommandBuilder copyBlock(long startOffset, int length) throws IOException {
+        assert length <= Short.MAX_VALUE;
+        this.writer.writeCopyBlock(startOffset, (short) length);
+        return this;
+    }
+
     public ReceiverCommandBuilder enumeratorDone() throws IOException {
         this.writer.writeEnumeratorDone();
         return this;

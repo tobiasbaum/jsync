@@ -3,12 +3,12 @@ package de.tntinteractive.jsync;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MD4StreamFilter extends InputStream {
+public class MD4InputStream extends InputStream {
 
     private final InputStream decorated;
     private final MD4 md4;
 
-    public MD4StreamFilter(InputStream decorated) {
+    public MD4InputStream(InputStream decorated) {
         this.decorated = decorated;
         this.md4 = new MD4();
     }
@@ -25,8 +25,15 @@ public class MD4StreamFilter extends InputStream {
     @Override
     public int read(byte[] buffer, int off, int len) throws IOException {
         final int actual = this.decorated.read(buffer, off, len);
-        this.md4.engineUpdate(buffer, off, len);
+        if (actual > 0) {
+            this.md4.engineUpdate(buffer, off, actual);
+        }
         return actual;
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.decorated.close();
     }
 
     public byte[] getDigest() {

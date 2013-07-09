@@ -55,4 +55,20 @@ public class TestHelper {
         return actualNames;
     }
 
+    public static String multiplyString(String s, int count) {
+        final StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            ret.append(s);
+        }
+        return ret.toString();
+    }
+
+    public static int rollingChecksum(String block) {
+        return Checksum32.determineFor(toIso(block));
+    }
+
+    public static byte[] shortMD4(String block1, int i) {
+        return MD4.determineFor(toIso(block1), i);
+    }
+
 }

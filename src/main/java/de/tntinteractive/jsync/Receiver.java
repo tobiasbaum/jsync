@@ -3,7 +3,6 @@ package de.tntinteractive.jsync;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
@@ -16,14 +15,14 @@ public class Receiver implements Runnable {
     private static final String TMP_SUFFIX = ".jstmp";
 
     private final DataInputStream input;
-    private final FilePathBuffer filePaths;
+    private final FastConcurrentList<TargetFileInfo> filePaths;
     private final BlockingQueue<Integer> toResend;
 
     private boolean enumeratorDone;
 
     private int openResends;
 
-    public Receiver(InputStream source, FilePathBuffer b, BlockingQueue<Integer> toResend) {
+    public Receiver(InputStream source, FastConcurrentList<TargetFileInfo> b, BlockingQueue<Integer> toResend) {
         this.input = new DataInputStream(source);
         this.filePaths = b;
         this.toResend = toResend;
@@ -34,8 +33,8 @@ public class Receiver implements Runnable {
         try {
             int index = -2;
             FilePath tmpFile = null;
-            OutputStream tmpFileStream = null;
-            MD4StreamFilter digestStream = null;
+            MD4OutputStream tmpFileStream = null;
+            RandomAccessInput templateFile = null;
 
             while (!Thread.interrupted()) {
                 final int command = this.input.read();
@@ -46,21 +45,33 @@ public class Receiver implements Runnable {
                     //Anfang einer neuen Datei => Tempdatei erzeugen
                     index = this.input.readInt();
                     tmpFile = this.createTempFileFor(index);
-                    tmpFileStream = tmpFile.openOutputStream();
-                    digestStream = new MD4StreamFilter(this.input);
+                    tmpFileStream = new MD4OutputStream(tmpFile.openOutputStream());
                 } else if (command == ReceiverCommand.RAW_DATA.getCode()) {
                     //Rohdaten => in Tempdatei schreiben
                     final int length = this.input.readInt();
-                    StreamHelper.copy(digestStream, tmpFileStream, length);
+                    StreamHelper.copy(this.input, tmpFileStream, length);
+                } else if (command == ReceiverCommand.COPY_BLOCK.getCode()) {
+                    //Block aus Quelldatei kopieren
+                    final long offset = this.input.readLong();
+                    final short length = this.input.readShort();
+                    if (templateFile == null) {
+                        templateFile = this.filePaths.get(index).getFilePath().openRandomAccessInput();
+                    }
+                    templateFile.copyTo(tmpFileStream, offset, length);
                 } else if (command == ReceiverCommand.FILE_END.getCode()) {
+                    if (templateFile != null) {
+                        templateFile.close();
+                        templateFile = null;
+                    }
+
                     //Ende der Datei => Prüfsumme prüfen
                     final byte[] expectedDigest = new byte[MD4.DIGEST_LENGTH];
                     this.input.readFully(expectedDigest);
 
-                    if (Arrays.equals(expectedDigest, digestStream.getDigest())) {
+                    if (Arrays.equals(expectedDigest, tmpFileStream.getDigest())) {
                         //Prüfsumme OK => echte Datei mit Tempdatei überschreiben
                         tmpFileStream.close();
-                        this.renameToRealName(tmpFile);
+                        this.renameToRealName(index, tmpFile);
                         if (this.enumeratorDone) {
                             this.openResends--;
                             assert this.openResends >= 0;
@@ -98,12 +109,13 @@ public class Receiver implements Runnable {
     }
 
     private FilePath createTempFileFor(int index) {
-        final FilePath orig = this.filePaths.get(index);
+        final FilePath orig = this.filePaths.get(index).getFilePath();
         return orig.getParent().getChild(orig.getName() + TMP_SUFFIX);
     }
 
-    private void renameToRealName(FilePath tmpFile) throws IOException {
-        tmpFile.renameTo(tmpFile.getName().substring(0, tmpFile.getName().length() - TMP_SUFFIX.length()));
+    private void renameToRealName(int index, FilePath tmpFile) throws IOException {
+        tmpFile.setLastChange(this.filePaths.get(index).getSourceChangeTime());
+        tmpFile.renameTo(this.filePaths.get(index).getFilePath().getName());
     }
 
 }

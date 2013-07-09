@@ -12,7 +12,7 @@ public class EnumeratorTest {
     private static String callEnumerator(StubFilePath p) throws Exception {
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         final ExceptionBuffer exc = new ExceptionBuffer();
-        final Enumerator e = new Enumerator(p, buffer, new FilePathBuffer(), exc);
+        final Enumerator e = new Enumerator(p, buffer, new FastConcurrentList<FilePath>(), exc);
         e.run();
         exc.doHandling();
         return TestHelper.toHexString(buffer.toByteArray());

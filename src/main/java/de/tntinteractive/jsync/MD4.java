@@ -124,6 +124,12 @@ public class MD4 extends MessageDigestSpi implements Cloneable {
         System.arraycopy(that.buffer, 0, this.buffer, 0, BLOCK_LENGTH);
     }
 
+    public static byte[] determineFor(byte[] block, int wantedSize) {
+        final MD4 md4 = new MD4();
+        md4.engineUpdate(block, 0, block.length);
+        return md4.shortenedDigest(wantedSize);
+    }
+
     // java.lang.Cloneable interface implementation --------------------
 
     @Override
@@ -188,6 +194,15 @@ public class MD4 extends MessageDigestSpi implements Cloneable {
         this.engineReset();
 
         return digest;
+    }
+
+    public byte[] shortenedDigest(int size) {
+        final byte[] fullDigest = this.engineDigest();
+        final byte[] shortened = new byte[size];
+        for (int i = 0; i < fullDigest.length; i++) {
+            shortened[i % size] ^= fullDigest[i];
+        }
+        return shortened;
     }
 
     @Override

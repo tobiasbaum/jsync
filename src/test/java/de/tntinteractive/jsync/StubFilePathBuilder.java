@@ -27,6 +27,11 @@ public class StubFilePathBuilder {
         return this;
     }
 
+    public StubFilePathBuilder file(String name, String content) {
+        new StubFilePath(this.current, name, content);
+        return this;
+    }
+
     public StubFilePath build() {
         assert this.current.getParent() == null;
         return this.current;

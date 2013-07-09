@@ -15,7 +15,7 @@ public class StubFilePath implements FilePath {
     private final boolean isDir;
     private final TreeMap<String, StubFilePath> children;
     private final long size;
-    private final long lastChange;
+    private long lastChange;
     private byte[] content;
 
     /**
@@ -145,6 +145,26 @@ public class StubFilePath implements FilePath {
             public void close() throws IOException {
                 this.buffer.close();
                 StubFilePath.this.content = this.buffer.toByteArray();
+            }
+        };
+    }
+
+    @Override
+    public void setLastChange(long lastChange) throws IOException {
+        this.lastChange = lastChange;
+    }
+
+    @Override
+    public RandomAccessInput openRandomAccessInput() throws IOException {
+        return new RandomAccessInput() {
+
+            @Override
+            public void copyTo(OutputStream target, long offset, short length) throws IOException {
+                target.write(StubFilePath.this.content, (int) offset, length);
+            }
+
+            @Override
+            public void close() throws IOException {
             }
         };
     }

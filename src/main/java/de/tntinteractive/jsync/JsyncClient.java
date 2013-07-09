@@ -42,7 +42,7 @@ public class JsyncClient {
                 final OutputStream ch2out = ch2.getOutputStream();
                 this.initSecondChannel(ch2out, sessionId);
 
-                final FilePathBuffer filePaths = new FilePathBuffer();
+                final FastConcurrentList<FilePath> filePaths = new FastConcurrentList<FilePath>();
                 final ExceptionBuffer exc = new ExceptionBuffer();
 
                 final Sender sender = new Sender(ch2in, filePaths, ch2out, exc);

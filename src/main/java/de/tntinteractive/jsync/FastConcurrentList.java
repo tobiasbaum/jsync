@@ -5,24 +5,24 @@ package de.tntinteractive.jsync;
  * Ist im Endeffekte eine Array-List, aber durch die deutlich verkleinerte Schnittstelle ist thread-safety
  * (mehrere Reader, ein Writer) sehr einfach und performant zu erreichen.
  */
-public class FilePathBuffer {
+public class FastConcurrentList<T> {
 
     private int length;
-    private volatile FilePath[] content;
+    private volatile Object[] content;
 
-    public FilePathBuffer() {
+    public FastConcurrentList() {
         this.length = 0;
-        this.content = new FilePath[128];
+        this.content = new Object[128];
     }
 
-    public FilePath get(int index) {
-        return this.content[index];
+    public T get(int index) {
+        return (T) this.content[index];
     }
 
-    public int add(FilePath p) {
+    public int add(T p) {
         final int index = this.length++;
         if (this.length >= this.content.length) {
-            final FilePath[] newContent = new FilePath[this.content.length * 2];
+            final Object[] newContent = new FilePath[this.content.length * 2];
             System.arraycopy(this.content, 0, newContent, 0, this.length);
             this.content = newContent;
         }

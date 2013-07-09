@@ -29,6 +29,12 @@ public class ReceiverCommandWriter {
         StreamHelper.copy(data, this.output, length);
     }
 
+    public void writeCopyBlock(long startOffset, short length) throws IOException {
+        this.output.writeByte(ReceiverCommand.COPY_BLOCK.getCode());
+        this.output.writeLong(startOffset);
+        this.output.writeShort(length);
+    }
+
     public void writeEnumeratorDone() throws IOException {
         this.output.writeByte(ReceiverCommand.ENUMERATOR_DONE.getCode());
     }

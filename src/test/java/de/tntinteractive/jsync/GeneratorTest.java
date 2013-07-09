@@ -22,7 +22,7 @@ public class GeneratorTest {
             BlockingQueue<Integer> toResend) {
         final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Generator e = new Generator(source, remoteParentDir, toResend, buffer, new FilePathBuffer());
+        final Generator e = new Generator(source, remoteParentDir, toResend, buffer, new FastConcurrentList<TargetFileInfo>());
         e.run();
         return TestHelper.toHexString(buffer.toByteArray());
     }
@@ -268,7 +268,7 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
-                .startFile(0)
+                .startFile(0, 4, 0)
                 .endFile()
                 .enumeratorDone()
                 .everythingOk()
@@ -294,9 +294,9 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
-                .startFile(0)
+                .startFile(0, 4, 0)
                 .endFile()
-                .startFile(1)
+                .startFile(1, 4, 0)
                 .endFile()
                 .enumeratorDone()
                 .everythingOk()
@@ -321,7 +321,7 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
-                .startFile(0)
+                .startFile(0, 4, 0)
                 .endFile()
                 .enumeratorDone()
                 .everythingOk()
@@ -352,12 +352,12 @@ public class GeneratorTest {
                 .build();
 
         final String expected = SenderCommandBuilder.start()
-                .startFile(0)
+                .startFile(0, 4, 0)
                 .endFile()
-                .startFile(1)
+                .startFile(1, 4, 0)
                 .endFile()
                 .enumeratorDone()
-                .startFile(0)
+                .startFile(0, 5, 0)
                 .endFile()
                 .everythingOk()
                 .toHexString();
@@ -368,4 +368,100 @@ public class GeneratorTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testResendMultipleTimes() throws Exception {
+        final LinkedBlockingQueue<Integer> toResend = new LinkedBlockingQueue<Integer>();
+        toResend.add(0);
+        toResend.add(1);
+        toResend.add(0);
+        toResend.add(0);
+        toResend.add(-1);
+
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .file("datei2", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0, 4, 0)
+                .endFile()
+                .startFile(1, 4, 0)
+                .endFile()
+                .enumeratorDone()
+                .startFile(0, 5, 0)
+                .endFile()
+                .startFile(1, 5, 0)
+                .endFile()
+                .startFile(0, 6, 0)
+                .endFile()
+                .startFile(0, 7, 0)
+                .endFile()
+                .everythingOk()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir, toResend);
+        checkChildren(remoteParentDir, "xyz");
+        checkChildren(remoteParentDir.getChild("xyz"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFileHashing() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .stepUp();
+
+        final String block1 = TestHelper.multiplyString("a", 2048);
+        final String block2 = TestHelper.multiplyString("b", 2048);
+        final String block3 = TestHelper.multiplyString("c", 2047);
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .file("datei", block1 + block2 + block3)
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0, 4, 2048)
+                .hash(TestHelper.rollingChecksum(block1), TestHelper.shortMD4(block1, 4))
+                .hash(TestHelper.rollingChecksum(block2), TestHelper.shortMD4(block2, 4))
+                .endFile()
+                .enumeratorDone()
+                .everythingOk()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testNoHashForShortFile() throws Exception {
+        final GeneratorCommandBuilder input = GeneratorCommandBuilder.start()
+                .stepDown("xyz")
+                .file("datei", 123, 456)
+                .stepUp();
+
+        final StubFilePath remoteParentDir = StubFilePathBuilder.start("tmp")
+                .startDir("xyz")
+                .file("datei", "kurzer Inhalt")
+                .endDir()
+                .build();
+
+        final String expected = SenderCommandBuilder.start()
+                .startFile(0, 4, 2048)
+                .endFile()
+                .enumeratorDone()
+                .everythingOk()
+                .toHexString();
+
+        final String actual = callGenerator(input, remoteParentDir);
+        assertEquals(expected, actual);
+    }
 }
