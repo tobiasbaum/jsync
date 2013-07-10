@@ -29,7 +29,11 @@ public class JsyncClient {
     public void syncDirectory(File localDirectory, String remoteHost, int remotePort,
             String remoteParentDirectory) throws Throwable {
 
+        System.out.println("Syncing from " + localDirectory + " to "
+                + remoteHost + ":" + remotePort + " " + remoteParentDirectory);
+
         final Socket ch1 = new Socket(remoteHost, remotePort);
+        ch1.setKeepAlive(true);
         try {
             final InputStream ch1in = ch1.getInputStream();
             final OutputStream ch1out = ch1.getOutputStream();
@@ -37,6 +41,7 @@ public class JsyncClient {
             final int sessionId = this.initiateSession(ch1in, ch1out, remoteParentDirectory);
 
             final Socket ch2 = new Socket(remoteHost, remotePort);
+            ch2.setKeepAlive(true);
             try {
                 final InputStream ch2in = ch2.getInputStream();
                 final OutputStream ch2out = ch2.getOutputStream();
@@ -57,6 +62,7 @@ public class JsyncClient {
                 st.join();
 
                 exc.doHandling();
+                System.out.println("JsyncClient is done.");
             } finally {
                 ch2.close();
             }

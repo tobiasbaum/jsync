@@ -64,6 +64,7 @@ public class FilePathAdapter implements FilePath {
 
     @Override
     public boolean isDirectory() {
+        //TODO X: Auf performantere Methode umsteigen, sobald Java 7 möglich
         return this.file.isDirectory();
     }
 

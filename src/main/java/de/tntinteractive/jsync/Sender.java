@@ -27,6 +27,8 @@ public class Sender implements Runnable {
     private final ReceiverCommandWriter writer;
     private final ExceptionBuffer exc;
 
+    private int count;
+
     public Sender(InputStream source, FastConcurrentList<FilePath> filePaths, OutputStream target, ExceptionBuffer exc) {
         this.source = new DataInputStream(source);
         this.filePaths = filePaths;
@@ -70,7 +72,7 @@ public class Sender implements Runnable {
                     if (!okReceived) {
                         throw new IOException("Error while copying! Check daemon log for details.");
                     }
-                    return;
+                    break;
                 }
                 if (command == SenderCommand.FILE_START.getCode()) {
                     index = this.source.readInt();
@@ -95,6 +97,7 @@ public class Sender implements Runnable {
                     } else {
                         this.copyFileUsingDiff(index, hashes, blockSize, strongHashSize);
                     }
+                    this.count++;
                 } else if (command == SenderCommand.ENUMERATOR_DONE.getCode()) {
                     this.writer.writeEnumeratorDone();
                 } else if (command == SenderCommand.EVERYTHING_OK.getCode()) {
@@ -103,6 +106,8 @@ public class Sender implements Runnable {
                     throw new IOException("unknown command " + command);
                 }
             }
+
+            System.out.println("Had to send " + this.count + " files");
         } catch (final IOException e) {
             this.exc.addThrowable(e);
         } finally {

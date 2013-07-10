@@ -27,7 +27,8 @@ public class Enumerator implements Runnable {
     @Override
     public void run() {
         try {
-            this.sendDirRecursive(this.localDir);
+            final int count = this.sendDirRecursive(this.localDir);
+            System.out.println("Enumerated " + count + " files.");
         } catch (final IOException e) {
             this.exc.addThrowable(e);
         } finally {
@@ -35,17 +36,20 @@ public class Enumerator implements Runnable {
         }
     }
 
-    private void sendDirRecursive(FilePath dir) throws IOException {
+    private int sendDirRecursive(FilePath dir) throws IOException {
+        int count = 0;
         this.writer.writeStepDown(dir.getName());
         for (final FilePath child : dir.getChildrenSorted()) {
             if (child.isDirectory()) {
-                this.sendDirRecursive(child);
+                count += this.sendDirRecursive(child);
             } else {
                 this.filePaths.add(child);
                 this.writer.writeFile(child.getName(), child.getSize(), child.getLastChange());
+                count++;
             }
         }
         this.writer.writeStepUp();
+        return count;
     }
 
 }
