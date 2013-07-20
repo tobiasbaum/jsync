@@ -25,3 +25,7 @@ Have a look at de.tntinteractive.jsync.JsyncClient.syncDirectory()
 Further info can be found in the wiki:
 https://github.com/tobiasbaum/jsync/wiki
 
+If you're looking for binaries, look into
+https://github.com/tobiasbaum/jsync/binaries
+(yeah, I know distributing binaries over github is not ideal)
+
