@@ -1,3 +1,21 @@
+/*
+    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+
+    This file is a part of jsync.
+
+    jsync is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    jsync is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with jsync.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package de.tntinteractive.jsync;
 
 import java.io.DataInputStream;
@@ -14,6 +32,7 @@ public class JsyncClient {
     public static final String SECOND_CHANNEL_HEADER = "JSYNC CH2";
 
     public static void main(String[] args) {
+        System.out.println(getHeader("JsyncClient"));
         try {
             final File localDirectory = parseLocalDirArg(args[0]);
             final String[] hostAndPort = args[1].split(":");
@@ -24,6 +43,10 @@ public class JsyncClient {
             System.out.println("Expected command line: <localDir> <host:port> <targetDir>");
             System.exit(99);
         }
+    }
+
+    public static String getHeader(String programName) {
+        return programName + " V1.0, Copyright (C) 2013  Tobias Baum";
     }
 
     private static File parseLocalDirArg(String arg) {
