@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -27,10 +28,14 @@ public class JsyncDaemon {
     public static void main(String[] args) {
         ServerSocket s = null;
         try {
+            if (args.length < 1 || args.length > 2) {
+                throw new IllegalArgumentException("wrong number of command line arguments");
+            }
             final int port = Integer.parseInt(args[0]);
-            s = new ServerSocket(port);
+            final String ip = args.length > 1 ? args[1] : null;
+            s = new ServerSocket(port, 30, ip == null ? null : InetAddress.getByName(ip));
         } catch (final Exception e) {
-            Logger.LOGGER.info("command line: <port>");
+            Logger.LOGGER.info("command line: <port> (<ip>)");
             Logger.LOGGER.log(Level.SEVERE, "error during start-up", e);
             System.exit(99);
         }
