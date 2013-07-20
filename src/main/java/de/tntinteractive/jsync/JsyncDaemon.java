@@ -62,14 +62,21 @@ public class JsyncDaemon {
         final String header = dIn.readUTF();
         if (header.equals(JsyncClient.FIRST_CHANNEL_HEADER)) {
             final String remoteParentDir = dIn.readUTF();
+            final boolean createDir = dIn.readBoolean();
             final File dir = new File(remoteParentDir);
-            if (!dir.exists()) {
-                final String msg = "Target directory does not exist: " + remoteParentDir;
-                Logger.LOGGER.warning(msg);
-                dOut.writeInt(-1);
-                dOut.writeUTF(msg);
-                bound.close();
-                return;
+            if (createDir) {
+                dir.mkdir();
+                if (!dir.exists()) {
+                    final String msg = "Target directory could not be created: " + remoteParentDir;
+                    sendError(bound, dOut, msg);
+                    return;
+                }
+            } else {
+                if (!dir.exists()) {
+                    final String msg = "Target directory does not exist: " + remoteParentDir;
+                    sendError(bound, dOut, msg);
+                    return;
+                }
             }
 
             final int sessionId = lastId++;
@@ -97,6 +104,13 @@ public class JsyncDaemon {
             Logger.LOGGER.warning("invalid header received: " + header);
             bound.close();
         }
+    }
+
+    private static void sendError(Socket bound, final DataOutputStream dOut, final String msg) throws IOException {
+        Logger.LOGGER.warning(msg);
+        dOut.writeInt(-1);
+        dOut.writeUTF(msg);
+        bound.close();
     }
 
     private static void cleanSessionMap() {

@@ -15,7 +15,7 @@ public class JsyncClient {
 
     public static void main(String[] args) {
         try {
-            final File localDirectory = new File(args[0]);
+            final File localDirectory = parseLocalDirArg(args[0]);
             final String[] hostAndPort = args[1].split(":");
             final int port = Integer.parseInt(hostAndPort[1]);
             new JsyncClient().syncDirectory(localDirectory, hostAndPort[0], port, args[2]);
@@ -23,6 +23,14 @@ public class JsyncClient {
             e.printStackTrace();
             System.out.println("Expected command line: <localDir> <host:port> <targetDir>");
             System.exit(99);
+        }
+    }
+
+    private static File parseLocalDirArg(String arg) {
+        if (arg.endsWith("/") || arg.endsWith("\\")) {
+            return new File(arg + ".");
+        } else {
+            return new File(arg);
         }
     }
 
@@ -38,7 +46,8 @@ public class JsyncClient {
             final InputStream ch1in = ch1.getInputStream();
             final OutputStream ch1out = ch1.getOutputStream();
 
-            final int sessionId = this.initiateSession(ch1in, ch1out, remoteParentDirectory);
+            final int sessionId = this.initiateSession(ch1in, ch1out, remoteParentDirectory,
+                    localDirectory.getName().equals("."));
 
             final Socket ch2 = new Socket(remoteHost, remotePort);
             ch2.setKeepAlive(true);
@@ -71,10 +80,12 @@ public class JsyncClient {
         }
     }
 
-    private int initiateSession(InputStream ch1in, OutputStream ch1out, String remoteParentDirectory) throws IOException {
+    private int initiateSession(InputStream ch1in, OutputStream ch1out, String remoteParentDirectory,
+            boolean createDir) throws IOException {
         final DataOutputStream out = new DataOutputStream(ch1out);
         out.writeUTF(FIRST_CHANNEL_HEADER);
         out.writeUTF(remoteParentDirectory);
+        out.writeBoolean(createDir);
 
         final DataInputStream in = new DataInputStream(ch1in);
         final int sessionId = in.readInt();
