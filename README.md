@@ -26,6 +26,6 @@ Further info can be found in the wiki:
 https://github.com/tobiasbaum/jsync/wiki
 
 If you're looking for binaries, look into
-https://github.com/tobiasbaum/jsync/binaries
+https://github.com/tobiasbaum/jsync/tree/master/binaries
 (yeah, I know distributing binaries over github is not ideal)
 
