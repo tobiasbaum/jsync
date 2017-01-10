@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -55,7 +55,7 @@ public class Generator implements Runnable {
         private final long size;
         private final long lastChange;
 
-        public GeneratorCommandData(GeneratorCommand type, String name, long size, long lastChange) {
+        public GeneratorCommandData(final GeneratorCommand type, final String name, final long size, final long lastChange) {
             this.type = type;
             this.name = name;
             this.size = size;
@@ -85,7 +85,7 @@ public class Generator implements Runnable {
         private final DataInputStream input;
         private GeneratorCommandData current;
 
-        public GeneratorCommandIterator(DataInputStream input) throws IOException {
+        public GeneratorCommandIterator(final DataInputStream input) throws IOException {
             this.input = input;
             this.move();
         }
@@ -124,8 +124,8 @@ public class Generator implements Runnable {
 
     }
 
-    public Generator(InputStream source, FilePath remoteParentDir, BlockingQueue<Integer> toResend,
-            OutputStream target, FastConcurrentList<TargetFileInfo> filePaths) {
+    public Generator(final InputStream source, final FilePath remoteParentDir, final BlockingQueue<Integer> toResend,
+            final OutputStream target, final FastConcurrentList<TargetFileInfo> filePaths) {
         this.input = new DataInputStream(source);
         this.localParentDir = remoteParentDir;
         this.toResend = toResend;
@@ -183,8 +183,8 @@ public class Generator implements Runnable {
         }
     }
 
-    private void mergeRecursive(FilePath localDir,
-            ExplicitMoveIterator<GeneratorCommandData> commandIter) throws IOException {
+    private void mergeRecursive(final FilePath localDir,
+            final ExplicitMoveIterator<GeneratorCommandData> commandIter) throws IOException {
 
         final ExplicitMoveIterator<FilePath> childrenIter =
                 new ExplicitMoveAdapter<FilePath>(localDir.getChildrenSorted());
@@ -270,7 +270,7 @@ public class Generator implements Runnable {
         }
     }
 
-    private void writeCopyCommandForExistingFile(int index) throws IOException {
+    private void writeCopyCommandForExistingFile(final int index) throws IOException {
         //als zweiter Sicherheitsmechanismus werden beim Resend nicht nur die Hashes länger, sondern auch
         //  die Blöcke
         final int blockSize = 2044 + this.strongHashSize;
@@ -284,7 +284,7 @@ public class Generator implements Runnable {
         this.writer.writeFileEnd();
     }
 
-    private void sendHashes(InputStream in, int blockSize) throws IOException {
+    private void sendHashes(final InputStream in, final int blockSize) throws IOException {
         final byte[] block = new byte[blockSize];
         while (StreamHelper.readFully(in, block) == block.length) {
             //nur vollständig gelesene Blöcke werden gehasht, der unvollständige Rest wird
@@ -295,12 +295,12 @@ public class Generator implements Runnable {
         }
     }
 
-    private void writeCopyCommandForMissingFile(int index) throws IOException {
+    private void writeCopyCommandForMissingFile(final int index) throws IOException {
         this.writer.writeFileStart(index, this.strongHashSize, 0);
         this.writer.writeFileEnd();
     }
 
-    private void createAllRecursive(FilePath dir, ExplicitMoveIterator<GeneratorCommandData> commandIter)
+    private void createAllRecursive(final FilePath dir, final ExplicitMoveIterator<GeneratorCommandData> commandIter)
         throws IOException {
 
         while (true) {
@@ -326,7 +326,7 @@ public class Generator implements Runnable {
         }
     }
 
-    private static void sanityCheck(boolean b) throws IOException {
+    private static void sanityCheck(final boolean b) throws IOException {
         if (!b) {
             throw new IOException("protocol failure");
         }

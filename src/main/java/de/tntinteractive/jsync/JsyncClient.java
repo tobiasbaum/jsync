@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -31,7 +31,7 @@ public class JsyncClient {
     public static final String FIRST_CHANNEL_HEADER = "JSYNC CH1";
     public static final String SECOND_CHANNEL_HEADER = "JSYNC CH2";
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         System.out.println(getHeader("JsyncClient"));
         try {
             final File localDirectory = parseLocalDirArg(args[0]);
@@ -45,11 +45,11 @@ public class JsyncClient {
         }
     }
 
-    public static String getHeader(String programName) {
-        return programName + " V1.0, Copyright (C) 2013  Tobias Baum";
+    public static String getHeader(final String programName) {
+        return programName + " V1.1, Copyright (C) 2013-2017  Tobias Baum";
     }
 
-    private static File parseLocalDirArg(String arg) {
+    private static File parseLocalDirArg(final String arg) {
         if (arg.endsWith("/") || arg.endsWith("\\")) {
             return new File(arg + ".");
         } else {
@@ -57,8 +57,10 @@ public class JsyncClient {
         }
     }
 
-    public void syncDirectory(File localDirectory, String remoteHost, int remotePort,
-            String remoteParentDirectory) throws Throwable {
+    public void syncDirectory(final File localDirectory, final String remoteHost, final int remotePort,
+            final String remoteParentDirectory) throws Exception {
+
+        final long startTime = System.currentTimeMillis();
 
         System.out.println("Syncing from " + localDirectory + " to "
                 + remoteHost + ":" + remotePort + " " + remoteParentDirectory);
@@ -94,7 +96,8 @@ public class JsyncClient {
                 st.join();
 
                 exc.doHandling();
-                System.out.println("JsyncClient is done.");
+                final long time = System.currentTimeMillis() - startTime;
+                System.out.println(String.format("JsyncClient is done after %d s", time / 1000));
             } finally {
                 ch2.close();
             }
@@ -103,8 +106,8 @@ public class JsyncClient {
         }
     }
 
-    private int initiateSession(InputStream ch1in, OutputStream ch1out, String remoteParentDirectory,
-            boolean createDir) throws IOException {
+    private int initiateSession(final InputStream ch1in, final OutputStream ch1out, final String remoteParentDirectory,
+            final boolean createDir) throws IOException {
         final DataOutputStream out = new DataOutputStream(ch1out);
         out.writeUTF(FIRST_CHANNEL_HEADER);
         out.writeUTF(remoteParentDirectory);
@@ -118,7 +121,7 @@ public class JsyncClient {
         return sessionId;
     }
 
-    private void initSecondChannel(OutputStream ch2out, int sessionId) throws IOException {
+    private void initSecondChannel(final OutputStream ch2out, final int sessionId) throws IOException {
         final DataOutputStream out = new DataOutputStream(ch2out);
         out.writeUTF(SECOND_CHANNEL_HEADER);
         out.writeInt(sessionId);

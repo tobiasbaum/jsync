@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -46,8 +46,9 @@ public class Sender implements Runnable {
     private final ExceptionBuffer exc;
 
     private int count;
+    private int countFully;
 
-    public Sender(InputStream source, FastConcurrentList<FilePath> filePaths, OutputStream target, ExceptionBuffer exc) {
+    public Sender(final InputStream source, final FastConcurrentList<FilePath> filePaths, final OutputStream target, final ExceptionBuffer exc) {
         this.source = new DataInputStream(source);
         this.filePaths = filePaths;
         this.writer = new ReceiverCommandWriter(new DataOutputStream(target));
@@ -59,16 +60,16 @@ public class Sender implements Runnable {
         private final byte[] strongHash;
         private final int blockNumber;
 
-        public BlockInfo(byte[] strongHash, int blockNumber) {
+        public BlockInfo(final byte[] strongHash, final int blockNumber) {
             this.strongHash = strongHash;
             this.blockNumber = blockNumber;
         }
 
-        public boolean matches(byte[] currentMD4) {
+        public boolean matches(final byte[] currentMD4) {
             return Arrays.equals(this.strongHash, currentMD4);
         }
 
-        public void writeCopyCommand(ReceiverCommandWriter writer, int blockSize) throws IOException {
+        public void writeCopyCommand(final ReceiverCommandWriter writer, final int blockSize) throws IOException {
             writer.writeCopyBlock(this.blockNumber * ((long) blockSize), (short) blockSize);
         }
 
@@ -112,6 +113,7 @@ public class Sender implements Runnable {
                 } else if (command == SenderCommand.FILE_END.getCode()) {
                     if (hashes.isEmpty()) {
                         this.copyFileFully(index);
+                        this.countFully++;
                     } else {
                         this.copyFileUsingDiff(index, hashes, blockSize, strongHashSize);
                     }
@@ -125,7 +127,7 @@ public class Sender implements Runnable {
                 }
             }
 
-            System.out.println("Had to send " + this.count + " files");
+            System.out.println("Had to send " + this.count + " files, " + this.countFully + " of these fully.");
         } catch (final IOException e) {
             this.exc.addThrowable(e);
         } finally {
@@ -133,8 +135,8 @@ public class Sender implements Runnable {
         }
     }
 
-    private void copyFileUsingDiff(int index, Map<Integer, List<BlockInfo>> hashes, int blockSize,
-            int strongHashSize) throws IOException {
+    private void copyFileUsingDiff(final int index, final Map<Integer, List<BlockInfo>> hashes, final int blockSize,
+            final int strongHashSize) throws IOException {
         final FilePath file = this.filePaths.get(index);
         final InputStream fileStream = file.openInputStream();
         try {
@@ -197,13 +199,13 @@ public class Sender implements Runnable {
         }
     }
 
-    private void flushRawData(ByteArrayOutputStream rawDataBuffer) throws IOException {
+    private void flushRawData(final ByteArrayOutputStream rawDataBuffer) throws IOException {
         final byte[] data = rawDataBuffer.toByteArray();
         this.writer.writeRawData(data.length, new ByteArrayInputStream(data));
         rawDataBuffer.reset();
     }
 
-    private void copyFileFully(int index) throws IOException {
+    private void copyFileFully(final int index) throws IOException {
         final FilePath file = this.filePaths.get(index);
         final InputStream fileStream = file.openInputStream();
         try {

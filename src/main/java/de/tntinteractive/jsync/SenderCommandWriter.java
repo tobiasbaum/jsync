@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -26,11 +26,11 @@ class SenderCommandWriter {
 
     private final DataOutputStream output;
 
-    public SenderCommandWriter(DataOutputStream output) {
+    public SenderCommandWriter(final DataOutputStream output) {
         this.output = output;
     }
 
-    void writeFileStart(int index, int strongHashSize, int blockSize) throws IOException {
+    void writeFileStart(final int index, final int strongHashSize, final int blockSize) throws IOException {
         assert strongHashSize <= Byte.MAX_VALUE;
         assert blockSize <= Short.MAX_VALUE;
         this.output.writeByte(SenderCommand.FILE_START.getCode());
@@ -39,7 +39,7 @@ class SenderCommandWriter {
         this.output.writeShort(blockSize);
     }
 
-    void writeHashes(int rollingHash, byte[] strongHash) throws IOException {
+    void writeHashes(final int rollingHash, final byte[] strongHash) throws IOException {
         this.output.writeByte(SenderCommand.HASH.getCode());
         this.output.writeInt(rollingHash);
         this.output.write(strongHash);

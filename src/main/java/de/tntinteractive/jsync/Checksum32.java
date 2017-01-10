@@ -2,7 +2,7 @@
     This version is derived from the version in Jarsync.
 
     Copyright (C) 2003  Casey Marshall <rsdio@metastatic.org>
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 

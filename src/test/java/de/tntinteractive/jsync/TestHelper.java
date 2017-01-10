@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Bimport java.io.UnsupportedEncodingException;
+    Copyright (C) 2013-2017  Tobias Bimport java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;

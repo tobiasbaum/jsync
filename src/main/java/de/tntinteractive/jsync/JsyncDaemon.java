@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -43,7 +43,7 @@ public class JsyncDaemon {
     private static int lastId;
     private static final Map<Integer, DaemonSession> sessionsWithMissingChannel = new HashMap<Integer, DaemonSession>();
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         Logger.LOGGER.info(JsyncClient.getHeader("JsyncDaemon"));
         ServerSocket s = null;
         try {
@@ -72,7 +72,7 @@ public class JsyncDaemon {
         }
     }
 
-    private static void handleConnection(Socket bound) throws IOException {
+    private static void handleConnection(final Socket bound) throws IOException {
         final InputStream in = bound.getInputStream();
         final OutputStream out = bound.getOutputStream();
         final DataInputStream dIn = new DataInputStream(in);
@@ -119,13 +119,15 @@ public class JsyncDaemon {
             }
             sessionsWithMissingChannel.remove(sessionId);
             session.addSecondChannel(bound, in, out);
+            Logger.LOGGER.info(
+                    "second channel for " + sessionId + " connected. Now " + Thread.activeCount() + " threads active.");
         } else {
             Logger.LOGGER.warning("invalid header received: " + header);
             bound.close();
         }
     }
 
-    private static void sendError(Socket bound, final DataOutputStream dOut, final String msg) throws IOException {
+    private static void sendError(final Socket bound, final DataOutputStream dOut, final String msg) throws IOException {
         Logger.LOGGER.warning(msg);
         dOut.writeInt(-1);
         dOut.writeUTF(msg);

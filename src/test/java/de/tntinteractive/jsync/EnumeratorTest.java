@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013  Tobias Bimport static org.junit.Assert.assertEquals;
+    Copyright (C) 2013-2017  Tobias Bimport static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 
