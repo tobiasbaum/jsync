@@ -1,12 +1,13 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 
 compileJava.options.setEncoding('UTF-8')
 sourceCompatibility = 1.6
 
-jar {
-    version = '1.1'
-}
+version = '1.1'
+group = 'de.tntinteractive.jsync'
+
 
 repositories {
     mavenCentral()
@@ -14,4 +15,35 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task sourceJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allJava
+}
+
+task javaDocJar(type: Jar) {
+    dependsOn javadoc
+    classifier 'javadoc'
+    from javadoc.destinationDir
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourceJar {
+                classifier 'sources'
+            }
+
+            artifact javaDocJar {
+                classifier 'javadoc'
+            }
+        }
+    }
 }
