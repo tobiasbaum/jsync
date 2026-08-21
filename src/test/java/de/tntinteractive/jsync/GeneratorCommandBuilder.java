@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -19,9 +19,8 @@
 package de.tntinteractive.jsync;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 
-public class GeneratorCommandBuilder extends CommandBuilder {
+public class GeneratorCommandBuilder extends TestCommandBuilder {
 
     private final GeneratorCommandWriter writer;
 
@@ -45,6 +44,11 @@ public class GeneratorCommandBuilder extends CommandBuilder {
 
     public GeneratorCommandBuilder stepUp() throws Exception {
         this.writer.writeStepUp();
+        return this;
+    }
+
+    public GeneratorCommandBuilder end() throws Exception {
+        this.writer.writeEnd();
         return this;
     }
 

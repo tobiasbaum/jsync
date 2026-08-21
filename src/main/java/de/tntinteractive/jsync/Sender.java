@@ -1,3 +1,21 @@
+/*
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
+
+    This file is a part of jsync.
+
+    jsync is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    jsync is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with jsync.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package de.tntinteractive.jsync;
 
 import java.io.BufferedInputStream;
@@ -111,68 +129,69 @@ public class Sender implements Runnable {
       this.exc.addThrowable(e);
     } 
   }
-  
-  private void copyFileUsingDiff(int index, Map<Integer, List<BlockInfo>> hashes, int blockSize, int strongHashSize) throws Exception {
-    FilePath file = this.filePaths.get(index);
-    InputStream fileStream = file.openInputStream();
+
+  private void copyFileUsingDiff(final int index, final Map<Integer, List<BlockInfo>> hashes, final int blockSize,
+                                 final int strongHashSize) throws Exception {
+    final FilePath file = this.filePaths.get(index);
+    final InputStream fileStream = file.openInputStream();
     try {
-      MD4InputStream md4stream = new MD4InputStream(fileStream);
-      BufferedInputStream bufferedStream = new BufferedInputStream(md4stream);
+      final MD4InputStream md4stream = new MD4InputStream(fileStream);
+      final BufferedInputStream bufferedStream = new BufferedInputStream(md4stream);
       this.writer.writeFileStart(index);
-      Checksum32 rollingChecksum = new Checksum32();
-      ByteArrayOutputStream rawDataBuffer = new ByteArrayOutputStream();
-      byte[] block = new byte[blockSize];
+
+      final Checksum32 rollingChecksum = new Checksum32();
+      final ByteArrayOutputStream rawDataBuffer = new ByteArrayOutputStream();
+      final byte[] block = new byte[blockSize];
       StreamHelper.readFully(bufferedStream, block);
       rollingChecksum.check(block, 0, block.length);
-      while (true) {
-        int currentChecksum = rollingChecksum.getValue();
-        List<BlockInfo> blocksWithChecksum = hashes.get(Integer.valueOf(currentChecksum));
+
+      outerLoop: while (true) {
+        final int currentChecksum = rollingChecksum.getValue();
+        final List<BlockInfo> blocksWithChecksum = hashes.get(currentChecksum);
         if (blocksWithChecksum != null) {
           rollingChecksum.copyBlock(block);
-          byte[] currentMD4 = MD4.determineFor(block, strongHashSize);
-          Iterator<BlockInfo> iterator = blocksWithChecksum.iterator();
-          while (true) {
-            if (iterator.hasNext()) {
-              BlockInfo b = iterator.next();
-              if (b.matches(currentMD4)) {
-                if (rawDataBuffer.size() > 0)
-                  flushRawData(rawDataBuffer); 
-                b.writeCopyCommand(this.writer, blockSize);
-                int readCount = StreamHelper.readFully(bufferedStream, block);
-                if (readCount < block.length) {
-                  rawDataBuffer.write(block, 0, readCount);
-                } else {
-                  rollingChecksum.check(block, 0, block.length);
-                  continue;
-                } 
+          final byte[] currentMD4 = MD4.determineFor(block, strongHashSize);
+          for (final BlockInfo b : blocksWithChecksum) {
+            if (b.matches(currentMD4)) {
+              if (rawDataBuffer.size() > 0) {
+                this.flushRawData(rawDataBuffer);
+              }
+              b.writeCopyCommand(this.writer, blockSize);
+              final int readCount = StreamHelper.readFully(bufferedStream, block);
+              if (readCount < block.length) {
+                //EOF
+                rawDataBuffer.write(block, 0, readCount);
+                break outerLoop;
               } else {
-                continue;
-              } 
-            } else {
-              break;
-            } 
-            if (rawDataBuffer.size() > 0)
-              flushRawData(rawDataBuffer); 
-            this.writer.writeFileEnd(md4stream.getDigest());
-            fileStream.close();
-          } 
-        } 
-        int nextByte = bufferedStream.read();
+                rollingChecksum.check(block, 0, block.length);
+                continue outerLoop;
+              }
+            }
+          }
+        }
+
+        //wenn er hier hinkommt, dann hat er kein Match gefunden
+        final int nextByte = bufferedStream.read();
         if (nextByte < 0) {
+          //EOF
           rollingChecksum.copyBlock(block);
           rawDataBuffer.write(block);
-          break;
-        } 
-        rawDataBuffer.write(rollingChecksum.roll((byte)nextByte));
-        if (rawDataBuffer.size() > 8096)
-          flushRawData(rawDataBuffer); 
-      } 
-      if (rawDataBuffer.size() > 0)
-        flushRawData(rawDataBuffer); 
+          break outerLoop;
+        }
+        rawDataBuffer.write(rollingChecksum.roll((byte) nextByte));
+        if (rawDataBuffer.size() > RAW_DATA_BUFFER_LIMIT) {
+          this.flushRawData(rawDataBuffer);
+        }
+      }
+
+      if (rawDataBuffer.size() > 0) {
+        this.flushRawData(rawDataBuffer);
+      }
+
       this.writer.writeFileEnd(md4stream.getDigest());
     } finally {
       fileStream.close();
-    } 
+    }
   }
   
   private void flushRawData(ByteArrayOutputStream rawDataBuffer) throws Exception {

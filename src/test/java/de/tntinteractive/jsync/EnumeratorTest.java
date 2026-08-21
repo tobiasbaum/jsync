@@ -1,10 +1,9 @@
 /*
-    Copyright (C) 2013-2017  Tobias Bimport static org.junit.Assert.assertEquals;
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
 
-import java.io.ByteArrayOutputStream;
+    This file is a part of jsync.
 
-import org.junit.Test;
-stribute it and/or modify
+    jsync is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -45,6 +44,7 @@ public class EnumeratorTest {
         final String expected = GeneratorCommandBuilder.start()
                 .stepDown("testverz")
                 .stepUp()
+                .end()
                 .toHexString();
 
         final String actual = callEnumerator(p);
@@ -67,6 +67,7 @@ public class EnumeratorTest {
                 .stepDown("b")
                 .stepUp()
                 .stepUp()
+                .end()
                 .toHexString();
 
         final String actual = callEnumerator(p);
@@ -86,6 +87,7 @@ public class EnumeratorTest {
                 .file("a.txt", 42, 123)
                 .file("b.txt", 43, 124)
                 .stepUp()
+                .end()
                 .toHexString();
 
         final String actual = callEnumerator(p);

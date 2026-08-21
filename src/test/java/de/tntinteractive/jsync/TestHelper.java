@@ -1,9 +1,9 @@
 /*
-    Copyright (C) 2013-2017  Tobias Bimport java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-odify
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
+
+    This file is a part of jsync.
+
+    jsync is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -20,7 +20,7 @@ package de.tntinteractive.jsync;
 
 import java.io.ByteArrayOutputStream;
 
-public class CommandBuilder {
+public class TestCommandBuilder {
 
     private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013-2017  Tobias Baum <tbaum at tntinteractive.de>
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
 
     This file is a part of jsync.
 
@@ -19,9 +19,8 @@
 package de.tntinteractive.jsync;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 
-public class SenderCommandBuilder extends CommandBuilder {
+public class SenderCommandBuilder extends TestCommandBuilder {
 
     private final SenderCommandWriter writer;
 

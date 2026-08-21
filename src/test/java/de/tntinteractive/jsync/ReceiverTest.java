@@ -1,14 +1,11 @@
 /*
-    Copyright (C) 2013-2017  Tobias Bimport static org.junit.Assert.assertEquals;
+    Copyright (C) 2013-2026  Tobias Baum <tbaum at tntinteractive.de>
 
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+    This file is a part of jsync.
 
-import org.junit.Test;
-n 3 of the License, or
+    jsync is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
     jsync is distributed in the hope that it will be useful,
