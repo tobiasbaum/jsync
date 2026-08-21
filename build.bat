@@ -1,1 +1,1 @@
-"C:\Programme\gradle\gradle-1.6\bin\gradle.bat" build
+.\gradlew.bat build
