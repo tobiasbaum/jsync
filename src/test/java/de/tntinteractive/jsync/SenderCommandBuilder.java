@@ -26,34 +26,34 @@ public class SenderCommandBuilder extends CommandBuilder {
     private final SenderCommandWriter writer;
 
     private SenderCommandBuilder() {
-        this.writer = new SenderCommandWriter(new DataOutputStream(this.getBuffer()));
+        this.writer = new SenderCommandWriter(new TestDataTarget(new DataOutputStream(this.getBuffer())));
     }
 
     public static SenderCommandBuilder start() {
         return new SenderCommandBuilder();
     }
 
-    public SenderCommandBuilder startFile(int index, int strongHashSize, int blockSize) throws IOException {
+    public SenderCommandBuilder startFile(int index, int strongHashSize, int blockSize) throws Exception {
         this.writer.writeFileStart(index, strongHashSize, blockSize);
         return this;
     }
 
-    public SenderCommandBuilder hash(int rollingChecksum, byte[] shortMD4) throws IOException {
+    public SenderCommandBuilder hash(int rollingChecksum, byte[] shortMD4) throws Exception {
         this.writer.writeHashes(rollingChecksum, shortMD4);
         return this;
     }
 
-    public SenderCommandBuilder endFile() throws IOException {
+    public SenderCommandBuilder endFile() throws Exception {
         this.writer.writeFileEnd();
         return this;
     }
 
-    public SenderCommandBuilder enumeratorDone() throws IOException {
+    public SenderCommandBuilder enumeratorDone() throws Exception {
         this.writer.writeEnumeratorDone();
         return this;
     }
 
-    public SenderCommandBuilder everythingOk() throws IOException {
+    public SenderCommandBuilder everythingOk() throws Exception {
         this.writer.writeEverythingOk();
         return this;
     }

@@ -27,36 +27,36 @@ public class ReceiverCommandBuilder extends CommandBuilder {
     private final ReceiverCommandWriter writer;
 
     private ReceiverCommandBuilder() {
-        this.writer = new ReceiverCommandWriter(new DataOutputStream(this.getBuffer()));
+        this.writer = new ReceiverCommandWriter(new TestDataTarget(new DataOutputStream(this.getBuffer())));
     }
 
     public static ReceiverCommandBuilder start() {
         return new ReceiverCommandBuilder();
     }
 
-    public ReceiverCommandBuilder startFile(int index) throws IOException {
+    public ReceiverCommandBuilder startFile(int index) throws Exception {
         this.writer.writeFileStart(index);
         return this;
     }
 
-    public ReceiverCommandBuilder endFile(byte[] checksum) throws IOException {
+    public ReceiverCommandBuilder endFile(byte[] checksum) throws Exception {
         this.writer.writeFileEnd(checksum);
         return this;
     }
 
-    public ReceiverCommandBuilder rawData(String string) throws IOException {
+    public ReceiverCommandBuilder rawData(String string) throws Exception {
         final byte[] data = TestHelper.toIso(string);
         this.writer.writeRawData(data.length, new ByteArrayInputStream(data));
         return this;
     }
 
-    public ReceiverCommandBuilder copyBlock(long startOffset, int length) throws IOException {
+    public ReceiverCommandBuilder copyBlock(long startOffset, int length) throws Exception {
         assert length <= Short.MAX_VALUE;
         this.writer.writeCopyBlock(startOffset, (short) length);
         return this;
     }
 
-    public ReceiverCommandBuilder enumeratorDone() throws IOException {
+    public ReceiverCommandBuilder enumeratorDone() throws Exception {
         this.writer.writeEnumeratorDone();
         return this;
     }

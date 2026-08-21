@@ -39,7 +39,7 @@ public class ReceiverTest {
             b.add(new TargetFileInfo(p, 678));
         }
         final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
-        final Receiver e = new Receiver(source, b, toResend);
+        final Receiver e = new Receiver(new TestDataSource(source), b, toResend, () -> {});
         e.run();
     }
 

@@ -35,7 +35,7 @@ public class SenderTest {
         final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         final ExceptionBuffer exc = new ExceptionBuffer();
-        final Sender e = new Sender(source, b, buffer, exc);
+        final Sender e = new Sender(new TestDataSource(source), b, new TestDataTarget(buffer), exc);
         e.run();
         exc.doHandling();
         return TestHelper.toHexString(buffer.toByteArray());

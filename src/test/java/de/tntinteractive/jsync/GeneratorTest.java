@@ -40,7 +40,7 @@ public class GeneratorTest {
             BlockingQueue<Integer> toResend) {
         final ByteArrayInputStream source = new ByteArrayInputStream(input.toByteArray());
         final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        final Generator e = new Generator(source, remoteParentDir, toResend, buffer, new FastConcurrentList<TargetFileInfo>());
+        final Generator e = new Generator(new TestDataSource(source), remoteParentDir, toResend, new TestDataTarget(buffer), new FastConcurrentList<TargetFileInfo>(), () -> {});
         e.run();
         return TestHelper.toHexString(buffer.toByteArray());
     }

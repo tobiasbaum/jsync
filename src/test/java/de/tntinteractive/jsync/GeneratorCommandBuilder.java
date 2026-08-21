@@ -26,24 +26,24 @@ public class GeneratorCommandBuilder extends CommandBuilder {
     private final GeneratorCommandWriter writer;
 
     public GeneratorCommandBuilder() {
-        this.writer = new GeneratorCommandWriter(new DataOutputStream(this.getBuffer()));
+        this.writer = new GeneratorCommandWriter(new TestDataTarget(new DataOutputStream(this.getBuffer())));
     }
 
     public static GeneratorCommandBuilder start() {
         return new GeneratorCommandBuilder();
     }
 
-    public GeneratorCommandBuilder stepDown(String name) throws IOException {
+    public GeneratorCommandBuilder stepDown(String name) throws Exception {
         this.writer.writeStepDown(name);
         return this;
     }
 
-    public GeneratorCommandBuilder file(String name, long size, long lastChange) throws IOException {
+    public GeneratorCommandBuilder file(String name, long size, long lastChange) throws Exception {
         this.writer.writeFile(name, size, lastChange);
         return this;
     }
 
-    public GeneratorCommandBuilder stepUp() throws IOException {
+    public GeneratorCommandBuilder stepUp() throws Exception {
         this.writer.writeStepUp();
         return this;
     }
